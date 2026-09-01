@@ -1,103 +1,108 @@
-## Created by SystemJargon
-## https://github.com/SystemJargon/fortiguard-webfilter
-## Created as Fortinet do not have a bulk URL scan utility nor any friendly API which exists for their webfilter.
+<#
+.SYNOPSIS
+Runs the maintained FortiGuard bulk lookup engine from PowerShell.
 
-## What this script does / things to understand?
+.DESCRIPTION
+This script is a Windows-friendly wrapper around webfilter.py. The Python
+implementation is the supported lookup engine because FortiGuard's public
+lookup page may reject simple HTTP clients and can change its HTML layout.
 
-## In your C:\users\username folder, you will have a folder called FortiWebFilter-BulkScan\ created.
-## Also you will have a text file called addresses.txt created in this new folder above.
-## Open addresses.txt. Place domains/urls - 1 per line to scan via Fortinet's webfilter.
-## The script will in console (in the ps window) and via output file save any results. The output file is "webfilter-output.txt"
+This project is an unofficial community tool and is not affiliated with or
+supported by Fortinet.
 
+.PARAMETER InputFile
+Text file containing one URL or domain per line.
 
-# Full path of the file
-$file = "$HOME\FortiWebFilter-BulkScan\addresses.txt"
+.PARAMETER OutputFile
+Optional CSV output path. If omitted, the Python engine creates a timestamped
+categories-*.csv file.
 
-#Full path to the archiving folder
-$WorkingDir = "$HOME\FortiWebFilter-BulkScan"
+.PARAMETER Delay
+Seconds to wait between targets.
 
-# If the file exists, do nothing, else create it.
-if (Get-Item -Path $file -ErrorAction Ignore) {
-    try {
-        ## If the Working directory does not exist, create it now.
-        if (-not(Test-Path -Path $WorkingDir -PathType Container)) {
-            $null = New-Item -ItemType Directory -Path $WorkingDir -ErrorAction STOP
-        }
-        ## Other actions we can place here if needed in the future
+.PARAMETER Timeout
+Per-request timeout in seconds.
 
-     } catch {
-        throw $_.Exception.Message
-     }
- }
- 
- #If the file does not exist, create it.
-if (-not(Test-Path -Path $file -PathType Leaf)) {
-     try {
-         $null = New-Item -ItemType File -Path $file -Force -ErrorAction Stop
-         Write-Host "The file [$file] has been created."
-         Write-Host "Place the URLs or domains you wish to scan in addresses.txt in '$WorkingDir'"
-     }
-     catch {
-         throw $_.Exception.Message
-     }
- }
-# If the file already exists, show the message and do nothing.
- else {
-     Write-Host "Cannot create [$file] because a file with that name already exists."
- }
+.PARAMETER Retries
+Number of retries for transient failures.
 
+.EXAMPLE
+.\FortiWebFilter-BulkScan.ps1 -InputFile .\addresses.txt
 
-# start actions
+.EXAMPLE
+.\FortiWebFilter-BulkScan.ps1 -InputFile .\targets.txt -OutputFile .\results.csv -Delay 3
 
-cd "$WorkingDir"
+.NOTES
+Original project: SystemJargon/fortiguard-webfilter
+License: GPL-3.0
+#>
 
-# Wait for confirmation to run script and that addresses has content
-# addresses should contain a url or domain per line we want to scan Fortiguard webfilter with in bulk
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [string]$InputFile = (Join-Path $PSScriptRoot 'addresses.txt'),
 
+    [Parameter()]
+    [string]$OutputFile,
 
-pause
+    [Parameter()]
+    [ValidateRange(0, 60)]
+    [double]$Delay = 2,
 
-# input of urls or domains
-$urls=gc "addresses.txt"
+    [Parameter()]
+    [ValidateRange(1, 300)]
+    [double]$Timeout = 15,
 
-# output files
-$wfout1 = "webfilter-output-raw.txt"
-$wfout2 = "webfilter-output.txt"
+    [Parameter()]
+    [ValidateRange(0, 10)]
+    [int]$Retries = 2
+)
 
-# clean-up results at start from last run
-rm $wfout2
-rm $wfout1
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-New-Item -ItemType File -Path $wfout1 -Force -ErrorAction Stop
-New-Item -ItemType File -Path $wfout2 -Force -ErrorAction Stop
-
-Clear-Host
-
-Write-Host "Begining webfilter category scan from addresses.txt"
-#Write-Host "This may take some time depending on how many url or domains are to be scanned"
-
-foreach($url in $urls) {
-$web = Invoke-WebRequest https://www.fortiguard.com/search?q=$url"&"engine=7
-# Write Output
-Add-Content -Value "$url" -Path $wfout1 
-$stringup = $web.tostring() -split "[`r`n]" | select-string "The address has been found as"
-Add-Content -Value $stringup -Path $wfout1 
-Add-Content -Value ------  -Path $wfout1 
-
-Start-Sleep -Seconds 3
+$PythonScript = Join-Path $PSScriptRoot 'webfilter.py'
+if (-not (Test-Path -LiteralPath $PythonScript -PathType Leaf)) {
+    throw "Python engine not found: $PythonScript"
 }
 
-# get rid of the HTML tags from output
-get-content $wfout1 | % {$_ -replace "\<.*?\>",""} | Out-File $wfout2
+function Get-PythonCommand {
+    $candidates = @(
+        @{ Command = 'python'; Prefix = @() },
+        @{ Command = 'python3'; Prefix = @() },
+        @{ Command = 'py'; Prefix = @('-3') }
+    )
 
-# remove our sort of temp file
-rm $wfout1
+    foreach ($candidate in $candidates) {
+        $resolved = Get-Command $candidate.Command -ErrorAction SilentlyContinue
+        if ($null -ne $resolved) {
+            return [PSCustomObject]@{
+                Path   = $resolved.Source
+                Prefix = $candidate.Prefix
+            }
+        }
+    }
 
-Write-Host "#################################################"
-Write-Host "Completed. Output written to '$wfout2'"
-Write-Host "#################################################"
-Write-Host "Results are also below"
-Write-Host ""
-Get-Content $wfout2
+    throw "Python 3 was not found. Install Python 3.10+ and run 'python -m pip install -r requirements.txt'."
+}
 
-#EOF
+$python = Get-PythonCommand
+$arguments = @()
+$arguments += $python.Prefix
+$arguments += $PythonScript
+$arguments += @('--input', $InputFile)
+$arguments += @('--delay', $Delay.ToString([Globalization.CultureInfo]::InvariantCulture))
+$arguments += @('--timeout', $Timeout.ToString([Globalization.CultureInfo]::InvariantCulture))
+$arguments += @('--retries', $Retries.ToString([Globalization.CultureInfo]::InvariantCulture))
+
+if ($OutputFile) {
+    $arguments += @('--output', $OutputFile)
+}
+
+& $python.Path @arguments
+$exitCode = $LASTEXITCODE
+if ($null -eq $exitCode) {
+    $exitCode = 1
+}
+
+exit $exitCode

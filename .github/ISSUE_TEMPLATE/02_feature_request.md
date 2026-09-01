@@ -1,24 +1,29 @@
 ---
 name: Feature request
-about: Request a new feature
-title: ''
+about: Propose a focused improvement
+title: "[Feature] "
 labels: enhancement
-assignees: 'SystemJargon'
+assignees: ''
 ---
 
-## Is your feature request related to a problem? Please describe.
+## Problem or use case
 
-A clear and concise description of the feature request.
+What workflow or limitation should be improved?
 
-## Describe the solution you'd like
+## Proposed outcome
 
-A clear and concise description of what you want to happen.
+Describe the behavior you want, including expected input and output where relevant.
 
-## Describe alternatives you've considered
+## Alternatives considered
 
-A clear and concise description of any alternative solutions or features you've
-considered.
+Describe any simpler workaround or alternative design you considered.
+
+## Acceptance criteria
+
+- [ ] The requested behavior is clearly testable.
+- [ ] Existing CLI behavior remains compatible or the breaking change is documented.
+- [ ] No customer data or secrets are required for testing.
 
 ## Additional context
 
-Add any other context or screenshots about the feature request here.
+Add sanitized examples or references if useful.

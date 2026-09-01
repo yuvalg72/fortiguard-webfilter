@@ -1,5 +1,0 @@
-example.com
-rt.com
-facebook.com
-virustotal.com
-github.com

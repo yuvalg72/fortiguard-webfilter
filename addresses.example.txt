@@ -1,0 +1,4 @@
+# One domain or URL per line.
+example.com
+fortinet.com
+https://github.com/

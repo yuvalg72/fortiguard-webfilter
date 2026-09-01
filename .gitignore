@@ -1,0 +1,20 @@
+# User input may contain customer or internal URLs. Keep it local.
+addresses.txt
+
+# Generated lookup results
+categories-*.csv
+addressesNotFound-*.txt
+webfilter-output*.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -169,6 +169,7 @@ Validate the FortiGate's FortiOS version, FortiGuard connectivity, local/web-rat
 
 - Upstream: `SystemJargon/fortiguard-webfilter`
 - This fork: maintained as a safer, testable bulk-lookup workflow
+- Sync model: intentionally locally maintained/diverged. Immediately before this documentation change, GitHub reported the fork as **1 commit ahead / 0 commits behind** upstream `main`; upstream changes are not assumed to be synchronized automatically.
 - Maintenance state: active
 
 Changes in this fork preserve upstream attribution and the GPL-3.0 license.

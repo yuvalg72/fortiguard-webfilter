@@ -1,8 +1,18 @@
+## Fork provenance
+
+This repository is a maintained fork of [SystemJargon/fortiguard-webfilter](https://github.com/SystemJargon/fortiguard-webfilter). Original authorship of the inherited project belongs to the upstream project and its contributors.
+
+- **Local purpose:** Maintain a safer, tested bulk FortiGuard Web Filter lookup workflow with a supported Python engine and Windows wrapper.
+- **Local changes:** The verified direct-parent comparison on 05/10/2026 was **2 commits ahead / 0 behind**. Local work adds a Python lookup engine, dependency manifests, parser tests, CI, input-safety handling, repository hygiene/security controls, and updates the PowerShell wrapper and README. The inherited `engine_6/` content is retained only for historical reference.
+- **Sync model:** Intentionally diverged maintained fork. Upstream changes require explicit review and are not assumed to be synchronized automatically.
+- **License and attribution:** GitHub identifies the inherited project as GPL-3.0. The upstream licensing statement is preserved; no local re-licensing is claimed.
+- **Links and project claims:** Upstream history and inherited scripts remain attributable to SystemJargon. Local validation and supported-path claims in this README apply only to this fork's documented changes.
+
+---
+
 # FortiGuard WebFilter Bulk Lookup
 
 Bulk-check domains and URLs against the public FortiGuard Web Filter Lookup and export the detected categories to CSV.
-
-This repository is a maintained fork of [SystemJargon/fortiguard-webfilter](https://github.com/SystemJargon/fortiguard-webfilter). The original project and historical scripts are licensed under GPL-3.0.
 
 > [!IMPORTANT]
 > This is an unofficial community tool. It is not a Fortinet API, is not affiliated with Fortinet, and depends on the behavior and HTML of FortiGuard's public lookup website.
